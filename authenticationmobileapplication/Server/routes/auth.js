@@ -12,12 +12,19 @@ authRouter.post("/api/signup", async (req, res) => {
             return res.status(400).json({ msg: "User with the same email already exists!" });
         }
 
-        // Add your logic here to create a new user if no existing user is found.
+        const hashedPassword = await bcryptjs.hash(password, 8);
 
-        res.status(200).json({ msg: "User registered successfully!" });
+        let user = new User({
+            email,
+            password: hashedPassword,
+            name,
+        });
+
+        // Add your logic here to create a new user if no existing user is found.
+        user = await user.save();
+        res.json(user);
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ msg: "An error occurred while signing up." });
+        res.status(500).json({ error: e.message });
     }
 });
 
