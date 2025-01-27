@@ -32,7 +32,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         _isLoading = true;
       });
 
-      await authServices.SignUpUser(
+      await authServices.signUpUser(
         context: context,
         email: _emailController.text,
         password: _passwordController.text,
