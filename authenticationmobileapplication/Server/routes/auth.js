@@ -1,4 +1,6 @@
 const express = require("express");
+const bcryptjs = require("bcryptjs");
+const User = require("../models/user");
 const authRouter = express.Router();
 
 // Sign Up
@@ -6,26 +8,44 @@ authRouter.post("/api/signup", async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-        // Assuming User is a model you're importing from your database ORM (like Mongoose)
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ msg: "User with the same email already exists!" });
         }
 
         const hashedPassword = await bcryptjs.hash(password, 8);
 
-        let user = new User({
+        const user = await User.create({
             email,
             password: hashedPassword,
             name,
         });
 
-        // Add your logic here to create a new user if no existing user is found.
-        user = await user.save();
         res.json(user);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-module.exports = authRouter; // Export the router
+// Sign In  
+authRouter.post("/api/signin", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(400).json({ msg: "User with this email does not exist!" });
+        }
+
+        const isMatch = await bcryptjs.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ msg: "Incorrect password!" });
+        }
+        
+        res.json({ msg: "Signed in successfully", user });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+module.exports = authRouter;
